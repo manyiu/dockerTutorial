@@ -1,0 +1,39 @@
+version: "3.7"
+services:
+  proxy:
+    build:
+      dockerfile: Dockerfile
+      context: ./proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+      - client
+  database:
+    image: mongo:4-xenial
+  caches:
+    image: redis:5-alpine
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: ./api
+    environment:
+      - ENVIRONMENT=DEVELOPMENT
+      - PORT=3001
+      - ALLOWED_HOST=http://localhost
+      - MONGO_HOST=database
+      - MONGO_PORT=27017
+      - REDIS_HOST=caches
+      - REDIS_PORT=6379
+    volumes:
+      - /app/node_modules
+      - ./api:/app
+    depends_on:
+      - database
+      - caches
+  client:
+    build:
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app
